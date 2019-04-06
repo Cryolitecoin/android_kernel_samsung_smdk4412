@@ -133,7 +133,7 @@ static void err_fg_detection_work(struct work_struct *work)
 
 	if (!err_fg_level) {
 		if (lcd->err_fg_detection_count < 10) {
-			schedule_delayed_work(&lcd->err_fg_detection, HZ/8);
+			schedule_delayed_work(&lcd->err_fg_detection, msecs_to_jiffies(125));
 			lcd->err_fg_detection_count++;
 			set_dsim_hs_clk_toggle_count(15);
 		} else
@@ -150,7 +150,7 @@ static irqreturn_t err_fg_detection_int(int irq, void *_lcd)
 	dev_info(&lcd->ld->dev, "\t\t%s\n", __func__);
 
 	lcd->err_fg_detection_count = 0;
-	schedule_delayed_work(&lcd->err_fg_detection, HZ/16);
+	schedule_delayed_work(&lcd->err_fg_detection, msecs_to_jiffies(63));
 
 	return IRQ_HANDLED;
 }
@@ -521,7 +521,7 @@ static int s6evr02_set_elvss(struct lcd_info *lcd, u8 force)
 	case 240 ... 250:
 		elvss_level = ELVSS_STATUS_240;
 		break;
-	case 255 ... 299:
+	case 299:
 		elvss_level = ELVSS_STATUS_300;
 		break;
 	}
@@ -925,10 +925,9 @@ static int s6evr02_get_brightness(struct backlight_device *bd)
 
 static int s6evr02_check_fb(struct lcd_device *ld, struct fb_info *fb)
 {
-	struct s3cfb_window *win = fb->par;
 	struct lcd_info *lcd = lcd_get_data(ld);
 
-	//dev_info(&lcd->ld->dev, "%s, fb%d\n", __func__, win->id);
+	dev_info(&lcd->ld->dev, "%s, fb%d\n", __func__, fb->node);
 
 	return 0;
 }

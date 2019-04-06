@@ -60,7 +60,7 @@ extern int check_unsafe_exec(struct linux_binprm *);
  * namespace.c
  */
 extern int copy_mount_options(const void __user *, unsigned long *);
-extern int copy_mount_string(const void __user *, char **);
+extern char *copy_mount_string(const void __user *);
 
 extern unsigned int mnt_get_count(struct vfsmount *mnt);
 extern struct vfsmount *__lookup_mnt(struct vfsmount *, struct dentry *, int);
@@ -97,6 +97,7 @@ extern struct file *get_empty_filp(void);
  * super.c
  */
 extern int do_remount_sb(struct super_block *, int, void *, int);
+extern bool grab_super_passive(struct super_block *sb);
 extern void __put_super(struct super_block *sb);
 extern void put_super(struct super_block *sb);
 extern struct dentry *mount_fs(struct file_system_type *,

@@ -4,7 +4,7 @@
 #ifndef __NET_NET_NAMESPACE_H
 #define __NET_NET_NAMESPACE_H
 
-#include <asm/atomic.h>
+#include <linux/atomic.h>
 #include <linux/workqueue.h>
 #include <linux/list.h>
 #include <linux/sysctl.h>
@@ -52,6 +52,8 @@ struct net {
 	struct list_head	cleanup_list;	/* namespaces on death row */
 	struct list_head	exit_list;	/* Use only net_mutex */
 
+	unsigned int		proc_inum;
+
 	struct proc_dir_entry 	*proc_net;
 	struct proc_dir_entry 	*proc_net_stat;
 
@@ -65,6 +67,7 @@ struct net {
 	struct list_head 	dev_base_head;
 	struct hlist_head 	*dev_name_head;
 	struct hlist_head	*dev_index_head;
+	unsigned int		dev_base_seq;	/* protected by rtnl_mutex */
 
 	/* core fib_rules */
 	struct list_head	rules_ops;
@@ -108,16 +111,19 @@ struct net {
 /* Init's network namespace */
 extern struct net init_net;
 
-#ifdef CONFIG_NET
+#ifdef CONFIG_NET_NS
 extern struct net *copy_net_ns(unsigned long flags, struct net *net_ns);
 
-#else /* CONFIG_NET */
-static inline struct net *copy_net_ns(unsigned long flags, struct net *net_ns)
+#else /* CONFIG_NET_NS */
+#include <linux/sched.h>
+#include <linux/nsproxy.h>
+static inline struct net *copy_net_ns(unsigned long flags, struct net *old_net)
 {
-	/* There is nothing to copy so this is a noop */
-	return net_ns;
+	if (flags & CLONE_NEWNET)
+		return ERR_PTR(-EINVAL);
+	return old_net;
 }
-#endif /* CONFIG_NET */
+#endif /* CONFIG_NET_NS */
 
 
 extern struct list_head net_namespace_list;
